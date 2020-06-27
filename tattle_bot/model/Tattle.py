@@ -46,9 +46,9 @@ class Tattle:
                     exception = str(e)
 
                     # If error is a rate limit then wait the specified duration
-                    if "ratelimit" in e:
+                    if "ratelimit" in exception:
                         duration = int("".join([i for i in exception if i.isdigit()]))
-                        if "minutes" in exception:
+                        if "minute" in exception:
                             multiplier = 60
                     time.sleep(duration * multiplier + 5)
                 else:
