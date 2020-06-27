@@ -43,8 +43,8 @@ class Tattle:
                 logging.error(e)
                 multiplier = 1
                 for error in e.items:
-                    error_message = error.error_message
-                    if "ratelimit" in error_message:
+                    if error.field == "ratelimit":
+                        error_message = error.error_message
                         try:
                             cooldown = int(
                                 "".join([i for i in error_message if i.isdigit()])
