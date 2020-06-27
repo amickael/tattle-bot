@@ -34,7 +34,11 @@ class Tattle:
         cooldown: int = 30,
         buffer: int = 5,
     ):
+        # Check if user exists
         target_user = mention.parent().author
+        if target_user is None:
+            return None
+
         message = handler.combined_formatted(target_user)
         for _ in range(retry + 1):
             try:
