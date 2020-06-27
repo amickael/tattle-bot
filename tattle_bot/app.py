@@ -71,6 +71,7 @@ def main():
     try:
         client.listen()
     except KeyboardInterrupt:
+        logging.info("Shutting down")
         raise SystemExit
 
 
