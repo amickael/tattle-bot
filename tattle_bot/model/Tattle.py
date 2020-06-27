@@ -1,10 +1,13 @@
 import time
+from typing import Union
+import logging
 
 from praw import Reddit
 from praw.exceptions import RedditAPIException
 from praw.models.reddit.comment import Comment
+from praw.models.reddit.message import Message
 
-from .Activity import Activity
+from tattle_bot.model.Activity import Activity
 
 
 class Tattle:
@@ -24,26 +27,36 @@ class Tattle:
             password=password,
         )
 
+    @staticmethod
+    def __process(handler: Activity, item: Union[Comment, Message]):
+        if isinstance(item, Comment):
+            author = item.parent().author
+            message = handler.combined_formatted(author)
+            while True:
+                try:
+                    item.reply(message)
+                except RedditAPIException as e:
+                    # Log error
+                    logging.error(e)
+
+                    # Initialize duration, multiplier, and exception
+                    duration = 30
+                    multiplier = 1
+                    exception = str(e)
+
+                    # If error is a rate limit then wait the specified duration
+                    if "ratelimit" in e:
+                        duration = int("".join([i for i in exception if i.isdigit()]))
+                        if "minutes" in exception:
+                            multiplier = 60
+                    time.sleep(duration * multiplier + 5)
+                else:
+                    break
+
     def listen(self, skip_existing: bool = True):
         handler = Activity(self.client)
         for item in self.client.inbox.stream(skip_existing=skip_existing):
-            if isinstance(item, Comment):
-                author = item.parent().author
-                message = handler.combined_formatted(author)
-                while True:
-                    try:
-                        item.reply(message)
-                    except RedditAPIException as e:
-                        duration = 30
-                        multiplier = 1
-                        exception = str(e)
-                        if "ratelimit" in e:
-                            duration = int(
-                                "".join([i for i in exception if i.isdigit()])
-                            )
-                            if "minutes" in exception:
-                                multiplier = 60
-                        print(duration * multiplier + 5)
-                        time.sleep(duration * multiplier + 5)
-                    else:
-                        break
+            try:
+                self.__process(handler, item)
+            except Exception as e:
+                logging.error(e)

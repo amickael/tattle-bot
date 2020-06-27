@@ -1,4 +1,4 @@
-from .app import client
+from tattle_bot.app import main
 
 if __name__ == "__main__":
-    client.listen()
+    main()

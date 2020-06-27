@@ -1,1 +1,1 @@
-from .Tattle import Tattle
+from tattle_bot.model.Tattle import Tattle
