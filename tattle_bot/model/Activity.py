@@ -23,7 +23,10 @@ class Activity:
             "Subreddit | Total activity",
             "---|:---:",
         ]
-        output.extend([f"/r/{item[0]} | {item[1]}" for item in data])
+        try:
+            output.extend([f"/r/{subreddit} | {count:,}" for subreddit, count in data])
+        except ValueError:
+            output.extend([f"/r/{subreddit} | {count}" for subreddit, count in data])
         output.extend(
             ["&nbsp;", "> I am a bot, this action was performed automatically"]
         )

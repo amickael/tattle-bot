@@ -38,12 +38,14 @@ class Tattle:
     ):
         # Check if another user has been passed in
         target_user = mention.parent().author
-        if isinstance(mention.body, str):
-            user_matches = re.findall(r"/u/[A-Za-z0-9_-]+", mention.body)
+        user_matches = re.findall(r"/u/[A-Za-z0-9_-]+", str(mention.body))
+        if len(user_matches) > 1:
             try:
-                if str(user_matches[-1]).lower() != self.username.lower():
-                    target_user = user_matches[-1]
-            except IndexError:
+                start_index = [str(i).lower() for i in user_matches].index(
+                    self.username.lower()
+                )
+                target_user = str(user_matches[start_index + 1]).lstrip("/u/")
+            except (ValueError, IndexError, TypeError):
                 pass
 
         # If user is None then abort
