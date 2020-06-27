@@ -4,6 +4,7 @@ import logging
 from praw import Reddit
 from praw.exceptions import RedditAPIException
 from praw.models.reddit.comment import Comment
+from praw.models.util import stream_generator
 
 from tattle_bot.model.Activity import Activity
 
@@ -26,37 +27,49 @@ class Tattle:
         )
 
     @staticmethod
-    def __process(handler: Activity, item: Comment):
-        requester = item.author
-        author = item.parent().author
-        message = handler.combined_formatted(author)
-        while True:
+    def __process(
+        handler: Activity,
+        mention: Comment,
+        retry: int = 5,
+        cooldown: int = 30,
+        buffer: int = 5,
+    ):
+        target_user = mention.parent().author
+        message = handler.combined_formatted(target_user)
+        for _ in range(retry + 1):
             try:
-                item.reply(message)
+                mention.reply(message)
             except RedditAPIException as e:
-                # Log error
                 logging.error(e)
-
-                # Initialize duration, multiplier, and exception
-                duration = 30
                 multiplier = 1
-                exception = str(e)
-
-                # If error is a rate limit then wait the specified duration
-                if "ratelimit" in exception:
-                    duration = int("".join([i for i in exception if i.isdigit()]))
-                    if "minute" in exception:
-                        multiplier = 60
-                time.sleep(duration * multiplier + 5)
+                for error in e.items:
+                    error_message = error.error_message
+                    if "ratelimit" in error_message:
+                        try:
+                            cooldown = int(
+                                "".join([i for i in error_message if i.isdigit()])
+                            )
+                            if "minute" in error_message:
+                                multiplier = 60
+                        except ValueError:
+                            pass
+                        else:
+                            break
+                time.sleep(cooldown * multiplier + buffer)
             else:
-                logging.info(f"Fetched info about /u/{author} for /u/{requester}")
+                mention.mark_read()
+                logging.info(
+                    f"Fetched info about /u/{target_user} for /u/{mention.author}"
+                )
                 break
 
     def listen(self, skip_existing: bool = True):
         handler = Activity(self.client)
-        for item in self.client.inbox.stream(skip_existing=skip_existing):
+        for mention in stream_generator(
+            self.client.inbox.mentions, skip_existing=skip_existing
+        ):
             try:
-                if isinstance(item, Comment) and item in self.client.inbox.mentions():
-                    self.__process(handler, item)
+                if isinstance(mention, Comment):
+                    self.__process(handler, mention)
             except Exception as e:
                 logging.error(e)
