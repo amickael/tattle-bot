@@ -14,6 +14,8 @@ from tattle_bot.model import Tattle
 ########################################################################################################################
 # Setup
 ########################################################################################################################
+os.chdir(os.path.dirname(__file__))
+print(os.getcwd())
 __appname__ = "tattle-bot"
 if os.path.isfile("../VERSION"):
     with open("../VERSION", "r") as infile:
