@@ -30,6 +30,7 @@ class Tattle:
     @staticmethod
     def __process(handler: Activity, item: Union[Comment, Message]):
         if isinstance(item, Comment):
+            requester = item.author
             author = item.parent().author
             message = handler.combined_formatted(author)
             while True:
@@ -51,6 +52,7 @@ class Tattle:
                             multiplier = 60
                     time.sleep(duration * multiplier + 5)
                 else:
+                    logging.info(f"Fetched info about {author} for {requester}")
                     break
 
     def listen(self, skip_existing: bool = True):
