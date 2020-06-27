@@ -52,7 +52,7 @@ class Tattle:
                             multiplier = 60
                     time.sleep(duration * multiplier + 5)
                 else:
-                    logging.info(f"Fetched info about {author} for {requester}")
+                    logging.info(f"Fetched info about /u/{author} for /u/{requester}")
                     break
 
     def listen(self, skip_existing: bool = True):
