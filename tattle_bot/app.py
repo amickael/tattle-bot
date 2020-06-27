@@ -38,11 +38,20 @@ log_path = os.path.join(
 if not os.path.exists(os.path.dirname(log_path)):
     os.makedirs(os.path.dirname(log_path))
 
-logging.basicConfig(
-    format="%(levelname)s : %(asctime)s : %(message)s",
-    level=logging.INFO,
-    filename=log_path,
-)
+# Set root logger params
+log_formatter = logging.Formatter("%(levelname)s : %(asctime)s : %(message)s")
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+# Set file logger params
+file_handler = logging.FileHandler(log_path)
+file_handler.setFormatter(log_formatter)
+root_logger.addHandler(file_handler)
+
+# Set stream logger params
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+root_logger.addHandler(console_handler)
 
 ########################################################################################################################
 # Instantiate app
