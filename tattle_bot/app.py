@@ -67,7 +67,7 @@ client = Tattle(
 # Main function
 ########################################################################################################################
 def main():
-    logging.info("Starting application")
+    logging.info(f"Starting {__appname__} (v{VERSION})")
     try:
         client.listen()
     except KeyboardInterrupt:
