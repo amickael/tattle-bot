@@ -1,5 +1,6 @@
 import time
 import logging
+import re
 
 from praw import Reddit
 from praw.exceptions import RedditAPIException
@@ -18,6 +19,7 @@ class Tattle:
         username: str,
         password: str,
     ):
+        self.username = f"/u/{username}"
         self.client = Reddit(
             client_id=client_id,
             client_secret=client_secret,
@@ -26,19 +28,29 @@ class Tattle:
             password=password,
         )
 
-    @staticmethod
     def __process(
+        self,
         handler: Activity,
         mention: Comment,
         retry: int = 5,
         cooldown: int = 30,
         buffer: int = 5,
     ):
-        # Check if user exists
+        # Check if another user has been passed in
         target_user = mention.parent().author
+        if isinstance(mention.body, str):
+            user_matches = re.findall(r"/u/[A-Za-z0-9_-]+", mention.body)
+            try:
+                if str(user_matches[-1]).lower() != self.username.lower():
+                    target_user = user_matches[-1]
+            except IndexError:
+                pass
+
+        # If user is None then abort
         if target_user is None:
             return None
 
+        # Process
         message = handler.combined_formatted(target_user)
         for _ in range(retry + 1):
             try:
