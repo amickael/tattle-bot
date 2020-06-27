@@ -1,7 +1,7 @@
 import os
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import sys
-import datetime as dt
 
 from dotenv import load_dotenv
 
@@ -31,9 +31,7 @@ log_root = {
     "win32": os.getenv("APPDATA", ""),
 }
 log_path = os.path.join(
-    log_root.get(sys.platform, ""),
-    __appname__,
-    f"{__appname__} {dt.datetime.now().isoformat()}.log",
+    log_root.get(sys.platform, ""), __appname__, f"{__appname__}.log",
 )
 if not os.path.exists(os.path.dirname(log_path)):
     os.makedirs(os.path.dirname(log_path))
@@ -44,7 +42,7 @@ root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 
 # Set file logger params
-file_handler = logging.FileHandler(log_path)
+file_handler = TimedRotatingFileHandler(log_path, when="d", interval=1, backupCount=14)
 file_handler.setFormatter(log_formatter)
 root_logger.addHandler(file_handler)
 
